@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SaaSquatch Leads | Caprae Capital Deal Sourcing</title>
+  <meta name="description" content="Clean, simple, professional B2B lead intelligence and PE deal sourcing platform.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Clean Minimalist Header -->
+    <header class="top-navbar">
+      <div class="brand-section">
+        <a href="/" class="brand-title-group">
+          <div class="brand-monogram">S</div>
+          <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+            <span class="brand-name">SaaSquatch Leads</span>
+            <span class="brand-sub">Caprae Capital Partners</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="header-controls">
+        <button id="btn-open-scrape-modal" class="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          Ingest Target Domain
+        </button>
+
+        <a href="/api/export/csv" id="btn-export-csv" class="btn btn-secondary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export CSV
+        </a>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="workspace-container">
+      <!-- 4 Compact Deal Metrics in a Row -->
+      <section class="summary-strip" id="stats-section">
+        <div class="strip-card">
+          <span class="strip-card-label">Pipeline Volume</span>
+          <span class="strip-card-num" id="stat-total">--</span>
+          <span class="strip-card-sub">Active deals in database</span>
+        </div>
+
+        <div class="strip-card">
+          <span class="strip-card-label">High Fit (≥80 ICP)</span>
+          <span class="strip-card-num" style="color: var(--accent-gold);" id="stat-high-priority">--</span>
+          <span class="strip-card-sub">Prime acquisition targets</span>
+        </div>
+
+        <div class="strip-card">
+          <span class="strip-card-label">Domain Verification</span>
+          <span class="strip-card-num" style="color: var(--accent-emerald);" id="stat-verified-rate">--%</span>
+          <span class="strip-card-sub">Live host resolution</span>
+        </div>
+
+        <div class="strip-card">
+          <span class="strip-card-label">Average ICP Score</span>
+          <span class="strip-card-num" id="stat-avg-score">--</span>
+          <span class="strip-card-sub">Algorithmic quality fit</span>
+        </div>
+      </section>
+
+      <!-- Table Toolbar (Search + Filters) -->
+      <section class="table-toolbar">
+        <div class="search-box-wrap">
+          <svg class="search-box-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" id="filter-search" class="search-box-input" placeholder="Filter company, domain, tech footprint..." autocomplete="off">
+          <span class="search-kbd-tag">/</span>
+        </div>
+
+        <div class="filter-pills-row">
+          <div class="filter-select-item">
+            <label for="filter-industry">Sector:</label>
+            <select id="filter-industry">
+              <option value="all">All Sectors</option>
+              <option value="B2B SaaS">B2B SaaS</option>
+              <option value="Logistics & Supply Chain">Logistics & Supply Chain</option>
+              <option value="Field Services & Industrial">Field Services & Industrial</option>
+              <option value="HealthTech">HealthTech</option>
+              <option value="FinTech & InsurTech">FinTech & InsurTech</option>
+              <option value="GovTech & Compliance">GovTech & Compliance</option>
+            </select>
+          </div>
+
+          <div class="filter-select-item">
+            <label for="filter-icp">Min ICP:</label>
+            <select id="filter-icp">
+              <option value="0">All (0+)</option>
+              <option value="80" selected>High Fit (80+)</option>
+              <option value="90">Elite (90+)</option>
+            </select>
+          </div>
+
+          <div class="filter-select-item">
+            <label for="filter-status">Status:</label>
+            <select id="filter-status">
+              <option value="all">All</option>
+              <option value="verified">Verified Live</option>
+              <option value="risky">Flagged</option>
+            </select>
+          </div>
+
+          <button id="btn-reset-filters" class="btn btn-ghost btn-sm" title="Reset all filters">
+            Reset
+          </button>
+        </div>
+      </section>
+
+      <!-- Clean Data Grid -->
+      <section class="data-grid-wrapper">
+        <div class="grid-top-meta">
+          <div>Showing <strong id="lead-count">0</strong> companies</div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span>Sort:</span>
+            <select id="select-sort" class="stage-select-dropdown">
+              <option value="icp_score">Highest ICP Score</option>
+              <option value="company_name">Company Name</option>
+              <option value="created_at">Date Added</option>
+            </select>
+          </div>
+        </div>
+
+        <table class="grid-table" id="leads-table">
+          <thead>
+            <tr>
+              <th scope="col">Company &amp; domain</th>
+              <th scope="col">Sector</th>
+              <th scope="col">Est. ARR &amp; team</th>
+              <th scope="col">ICP score</th>
+              <th scope="col">Pipeline stage</th>
+              <th scope="col">Data status</th>
+              <th scope="col" style="text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="leads-tbody">
+            <!-- Dynamically populated or skeleton loaded -->
+          </tbody>
+        </table>
+
+        <!-- Designed Empty State (Invitation to Act) -->
+        <div id="empty-state" class="hidden" style="text-align: center; padding: 4rem 1.5rem; max-width: 480px; margin: 0 auto;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-subtle); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem; color: var(--text-muted);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </div>
+          <h3 style="color: #fff; font-size: 1.1rem; margin-bottom: 0.4rem;">No matching acquisition targets</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin-bottom: 1.25rem;">No leads match your current criteria. Ingest a new domain to analyze or clear your active filters to view all records.</p>
+          <div style="display: flex; justify-content: center; gap: 0.75rem;">
+            <button id="btn-empty-reset" class="btn btn-secondary btn-sm">Clear Active Filters</button>
+            <button id="btn-empty-ingest" class="btn btn-primary btn-sm">Ingest Target Domain</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Slide-Over Right Drawer (Deal Inspector) -->
+    <div id="drawer-backdrop" class="drawer-backdrop hidden">
+      <aside class="drawer-sheet">
+        <div class="drawer-header">
+          <div class="drawer-company-header">
+            <div class="drawer-avatar" id="detail-avatar">--</div>
+            <div>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <h3 id="detail-company-name">Company</h3>
+                <span id="detail-icp-badge" class="score-badge-inline score-high-val">90 ICP</span>
+              </div>
+              <a id="detail-domain-link" href="#" target="_blank" style="font-family: 'JetBrains Mono', monospace; font-size: 0.775rem; color: #10b981; text-decoration: none;">domain.com</a>
+            </div>
+          </div>
+          <button id="btn-close-drawer" class="btn btn-ghost" style="font-size: 1.3rem; padding: 0.2rem 0.5rem;">&times;</button>
+        </div>
+
+        <div class="drawer-body-scroll">
+          <!-- Pipeline Stage Selector -->
+          <div class="drawer-card" style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <span style="font-size: 0.75rem; color: var(--text-muted); display: block; text-transform: uppercase; font-weight: 600;">Deal Stage</span>
+              <strong style="color: #fff; font-size: 0.875rem;" id="drawer-current-stage-text">New Target</strong>
+            </div>
+            <select id="drawer-stage-select" class="stage-select-dropdown" style="padding: 0.4rem 0.75rem; font-size: 0.825rem;">
+              <option value="New Target">New Target</option>
+              <option value="Under Review">Under Review</option>
+              <option value="Outreach Sent">Outreach Sent</option>
+              <option value="Qualified Lead">Qualified Lead</option>
+              <option value="Passed">Passed</option>
+            </select>
+          </div>
+
+          <!-- Overview & AI Summary -->
+          <div class="drawer-card">
+            <h4>AI Executive Summary</h4>
+            <p id="detail-ai-summary" style="font-size: 0.875rem; line-height: 1.6; color: var(--text-secondary);">Summary...</p>
+          </div>
+
+          <!-- Caprae 7-Year M&A Levers -->
+          <div class="drawer-card">
+            <h4>Caprae 7-Year M&A Value Drivers</h4>
+            <ul id="detail-signals-list" class="signal-list-clean">
+              <!-- Injected -->
+            </ul>
+          </div>
+
+          <!-- Metrics 2x2 -->
+          <div class="drawer-card">
+            <h4>Financial & Operational Footprint</h4>
+            <div class="drawer-metrics-2x2">
+              <div class="drawer-metric-item">
+                <span>Estimated Revenue</span>
+                <strong id="detail-revenue">$1M - $5M</strong>
+              </div>
+              <div class="drawer-metric-item">
+                <span>Team Size</span>
+                <strong id="detail-employees">11-50</strong>
+              </div>
+              <div class="drawer-metric-item">
+                <span>Sector</span>
+                <strong id="detail-industry">B2B SaaS</strong>
+              </div>
+              <div class="drawer-metric-item">
+                <span>Location</span>
+                <strong id="detail-location">United States</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tech Footprint -->
+          <div class="drawer-card">
+            <h4>Detected Tech Stack</h4>
+            <div id="detail-tech-stack" class="tech-pills-wrap">
+              <!-- Injected -->
+            </div>
+          </div>
+
+          <!-- Verified Contacts -->
+          <div class="drawer-card">
+            <h4>Verified Contact Pathways</h4>
+            <div style="display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.825rem;">
+              <div><strong>Email:</strong> <span id="detail-email" style="color: #fff;">--</span></div>
+              <div><strong>Phone:</strong> <span id="detail-phone" style="color: #fff;">--</span></div>
+              <div><strong>LinkedIn:</strong> <a id="detail-linkedin" href="#" target="_blank" style="color: #10b981;">Profile Link</a></div>
+            </div>
+          </div>
+
+          <!-- Cold Outreach Generator -->
+          <div class="drawer-card" style="border-color: rgba(16, 185, 129, 0.3);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+              <h4>AI Cold Outreach Drafter</h4>
+              <span style="font-size: 0.7rem; font-weight: 700; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 1px 6px; border-radius: 4px;">Operator Model</span>
+            </div>
+
+            <div style="margin-bottom: 0.75rem;">
+              <select id="select-outreach-type" class="stage-select-dropdown" style="width: 100%; padding: 0.45rem;">
+                <option value="pe_acquisition">Caprae 7-Year M&A Recapitalization (Recommended)</option>
+                <option value="founder_to_founder">Peer Founder-to-Founder Connection</option>
+                <option value="saas_growth">SaaSquatch AI Efficiency Audit</option>
+              </select>
+            </div>
+
+            <button id="btn-generate-outreach" class="btn btn-secondary btn-sm" style="width: 100%; margin-bottom: 0.75rem;">
+              Regenerate Pitch Angle
+            </button>
+
+            <div class="outreach-box-clean">
+              <div class="outreach-subject-title">
+                <strong>Subject:</strong> <span id="outreach-subject">Generating...</span>
+              </div>
+              <textarea id="outreach-body" class="outreach-body-area" rows="10" readonly></textarea>
+            </div>
+
+            <button id="btn-copy-email" class="btn btn-primary" style="width: 100%; margin-top: 0.75rem;">
+              Copy Subject & Email to Clipboard
+            </button>
+          </div>
+
+          <!-- Deal Notes -->
+          <div class="drawer-card">
+            <h4>Analyst Deal Notes</h4>
+            <textarea id="drawer-notes-input" class="outreach-body-area" rows="4" placeholder="Add confidential notes on this prospect..." style="background: #090b10; padding: 0.65rem; border: 1px solid var(--border-subtle); border-radius: 4px; color: #fff;"></textarea>
+            <button id="btn-save-notes" class="btn btn-secondary btn-sm" style="margin-top: 0.5rem;">Save Notes</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Clean Ingest Target Modal -->
+    <div id="modal-scrape" class="modal-layer-clean hidden">
+      <div class="modal-box-clean">
+        <div class="modal-box-header">
+          <h3 style="font-size: 1.1rem; color: #fff;">Ingest Target Domain</h3>
+          <button id="btn-close-scrape-modal" class="btn btn-ghost" style="font-size: 1.3rem; padding: 0.2rem 0.5rem;">&times;</button>
+        </div>
+        <div class="modal-box-body">
+          <form id="form-scrape">
+            <div style="margin-bottom: 1rem;">
+              <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">Company Website or Domain</label>
+              <div style="display: flex; align-items: center; background: #090b10; border: 1px solid var(--border-subtle); border-radius: 6px; overflow: hidden;">
+                <span style="padding: 0.6rem 0.8rem; font-size: 0.8rem; color: var(--text-muted); background: rgba(255,255,255,0.03); border-right: 1px solid var(--border-subtle); font-family: 'JetBrains Mono', monospace;">https://</span>
+                <input type="text" id="input-scrape-domain" placeholder="e.g. linear.app or zapier.com" style="flex: 1; padding: 0.6rem 0.8rem; background: transparent; border: none; color: #fff; font-size: 0.85rem; outline: none;" required>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 1.25rem;">
+              <span style="font-size: 0.75rem; color: var(--text-muted);">Quick samples:</span>
+              <button type="button" class="btn btn-ghost btn-sm sample-chip" data-domain="linear.app" style="font-size: 0.725rem; padding: 2px 6px;">linear.app</button>
+              <button type="button" class="btn btn-ghost btn-sm sample-chip" data-domain="notion.so" style="font-size: 0.725rem; padding: 2px 6px;">notion.so</button>
+              <button type="button" class="btn btn-ghost btn-sm sample-chip" data-domain="zapier.com" style="font-size: 0.725rem; padding: 2px 6px;">zapier.com</button>
+            </div>
+
+            <div id="scrape-error-box" class="modal-error-banner hidden" role="alert">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span id="scrape-error-text">Failed to ingest domain.</span>
+            </div>
+
+            <div id="scrape-progress" class="hidden" style="padding: 0.85rem; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; margin-bottom: 1rem; font-size: 0.825rem; color: #10b981;">
+              Resolving DNS, extracting tech stack & evaluating qualification...
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.65rem;">
+              <button type="button" id="btn-cancel-scrape" class="btn btn-ghost">Cancel</button>
+              <button type="submit" id="btn-submit-scrape" class="btn btn-primary">Start Ingestion</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast rack -->
+    <div id="toast-container" class="toast-rack"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
