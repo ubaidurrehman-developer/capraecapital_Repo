@@ -16,7 +16,11 @@ __pycache__/
 # Local databases and logs (datasets are tracked in data/leads.json and data/leads.csv)
 *.log
 
-*.md
+BUSINESS_UNDERSTANDING.md
+DESIGN.md
+README.md
+VIDEO_WALKTHROUGH_SCRIPT.md
+
 .agents/
 .codex/
 skills-lock.json
